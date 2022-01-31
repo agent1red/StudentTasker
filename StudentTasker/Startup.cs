@@ -32,36 +32,9 @@ namespace StudentTasker
             services.AddServerSideBlazor();
             services.AddTelerikBlazor();
             services.AddSingleton<WeatherForecastService>();
-            services.AddDbContextFactory<DataContext>(options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
-                     sqlServerOptionsAction: sqlOptions =>
-                     {
-                         sqlOptions.EnableRetryOnFailure();
-                     }
-                    );
-            });
-            services.AddDbContext<DataContext>(options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
-                     sqlServerOptionsAction: sqlOptions =>
-                     {
-                         sqlOptions.EnableRetryOnFailure();
-                     }
-                    );
-            });
-            services.AddDbContext<NewDataContext>(options =>
-            {
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"),
-                     sqlServerOptionsAction: sqlOptions =>
-                     {
-                         sqlOptions.EnableRetryOnFailure();
-                     }
-                    );
-            });
+            services.AddDbContextFactory<DataContext>(options => options.UseSqlServer(Environment.GetEnvironmentVariable("DefaultConnection")));
+           
             services.AddScoped<IStudentTaskService, StudentTaskService>();
-            services.AddScoped<IGetNewData, GetNewData>();
-
         
         }
 
