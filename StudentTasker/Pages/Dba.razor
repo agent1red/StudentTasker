@@ -1,0 +1,241 @@
+﻿@page "/Dba"
+
+@inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
+@inject NavigationManager NavigationManager;
+@using StudentTaskerModels
+@using Telerik.Blazor.Components
+
+
+<div class="d-flex-column justify-content-center mb-4 mt-5">
+    <div class="row d-flex justify-content-center">
+        <h5>Add Your Task Here</h5>
+    </div>
+    <div class="row d-flex justify-content-center">
+        <div class="row border border-primary rounded p-5">
+            <TelerikForm Model="@DBA" EditContext="@MyEditContext" OnSubmit="@OnSubmitHandler">
+                <FormValidation>
+                    <DataAnnotationsValidator></DataAnnotationsValidator>
+                </FormValidation>
+                <FormItems>
+                    <FormItem Field="@nameof(DBA.SubjectTypeForDba)"></FormItem>
+                    <FormItem Field="@nameof(DBA.DbaModule)"></FormItem>
+                    <FormItem>
+                        <Template>
+                            <label for="DbaDate">DBA Assessment Date</label>
+                            <TelerikDatePicker Min="@DatePickerMin" @bind-Value="@selectedDate" Id="DbaDate"></TelerikDatePicker>
+                        </Template>
+                    </FormItem>
+                    <FormItem>
+                        <Template>
+                            <label for="DbaTime">DBA Assessment Time</label>
+                            <TelerikTimePicker Min="@Min" Max="@Max" Format="hh:mm:ss tt" @bind-Value="@selectedTime" Id="DbaTime">
+                            </TelerikTimePicker>
+                        </Template>
+                    </FormItem>
+                </FormItems>
+            </TelerikForm>
+        </div>
+
+
+    </div>
+  
+</div>
+
+<div class="row">
+    <div class="container w-75">
+        <TelerikGrid @ref="Grid"
+                     Data="@DBAs"
+                     PageSize="3"
+                     Sortable="true"
+                     Groupable="true"
+                     Pageable="true"
+                     OnUpdate="@UpdateItem"
+                     OnDelete="@DeleteItem"
+                     ConfirmDelete="true"
+                     FilterMode="@GridFilterMode.FilterMenu"
+                     SelectionMode="@GridSelectionMode.Multiple"
+                     EditMode="@GridEditMode.Inline">
+            <GridToolBar>
+                <GridSearchBox DebounceDelay="200"></GridSearchBox>
+            </GridToolBar>
+            <GridColumns>
+
+                <GridColumn Field="@(nameof(DBA.DbaId))" Title="ID" Filterable="false" Editable="false" Groupable="false" Width="60px"></GridColumn>
+
+                <GridColumn Field="@(nameof(DBA.SubjectTypeForDba))" Editable="true" Filterable="false" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(DBA.DbaModule))" Filterable="false" Groupable="false"></GridColumn>
+
+                <GridColumn Field="@(nameof(DBA.DateAdded))" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="false" Groupable="true"></GridColumn>
+                <GridColumn Field="@(nameof(DBA.DateOfDba))" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="true" Groupable="true" OnCellRender="@OnCellRenderHandler">
+                    <EditorTemplate>
+                        <TelerikDatePicker Min="@DatePickerMin" @bind-Value="@selectedDate" Id="DbaDate"></TelerikDatePicker>
+                    </EditorTemplate>
+                </GridColumn>
+                <GridColumn Field="@(nameof(DBA.TimeofDba))" DisplayFormat="{0:hh:mm tt}" Filterable="true" Editable="true" Groupable="false">
+                    <EditorTemplate>
+                        <TelerikTimePicker Min="@Min" Max="@Max" Format="0:hh:mm tt" @bind-Value="@selectedTime"></TelerikTimePicker>
+                    </EditorTemplate>
+                </GridColumn>
+                <GridColumn Field="@(nameof(DBA.IsCompleted))" Filterable="true" Groupable="true" Width="120px">
+                    <Template>
+                        @{
+                            var t = context as DBA;
+                            if (t.IsCompleted == true)
+                            {
+                                <td>Yes</td>
+                            }
+                            else
+                            {
+                                <td>No</td>
+                            }
+
+                        }
+                    </Template>
+                </GridColumn>
+                <GridCommandColumn Title="Edit or Delete">
+                    <GridCommandButton Command="Edit" Icon="edit"></GridCommandButton>
+                    <GridCommandButton Command="Delete" Icon="delete">Delete</GridCommandButton>
+                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
+                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                </GridCommandColumn>
+
+            </GridColumns>
+
+        </TelerikGrid>
+    </div>
+
+</div>
+
+
+
+@code {
+
+    [CascadingParameter]
+    protected Notification Notification { get; set; }
+
+
+    Telerik.Blazor.Components.TelerikTimePicker<DateTime?> theTimePicker;
+    public EditContext MyEditContext { get; set; }
+    public DBA DBA { get; set; } = new();
+
+    private List<DBA> DBAs { get; set; }
+    public TelerikGrid<DBA> Grid { get; set; }
+
+    //Telerik Datepicker
+    private DateTime? selectedDate { get; set; }
+    private DateTime? selectedTime { get; set; }
+    public DateTime DatePickerMin = DateTime.Today;
+
+
+    //// Telerik Timepicker - only the time portions are used
+    public DateTime Min = new DateTime(1900, 1, 1, 8, 15, 0);
+    public DateTime Max = new DateTime(1900, 1, 1, 19, 30, 45);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var count = 0;
+        MyEditContext = new EditContext(DBA);
+        DBAs = await Task.Run(() => TaskService.GetAllDbasAsync());
+
+
+        foreach (var item in DBAs)
+        {
+            if (item.DateOfDba < DateTime.Today & item.IsCompleted == false)
+            {
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            ShowNotifications();
+        }
+    }
+
+
+    protected async void OnSubmitHandler(EditContext editContext)
+    {
+        if (selectedDate == null || selectedTime == null)
+        {
+            NavigationManager.NavigateTo("/Dba", true);
+            return;
+        }
+        DBA.DateOfDba = (DateTime)selectedDate;
+        DBA.TimeofDba = (DateTime)selectedTime;
+        await TaskService.AddStudentDbaAsync(DBA);
+
+
+        NavigationManager.NavigateTo("/Dba", true);
+
+    }
+
+
+
+    protected async void UpdateItem(GridCommandEventArgs args)
+    {
+        DBA dBA = new();
+        dBA = (DBA)args.Item;
+        if (selectedTime != null)
+        {
+            dBA.TimeofDba = (DateTime)selectedTime;
+        }
+        if (selectedDate != null)
+        {
+            dBA.DateOfDba = (DateTime)selectedDate;
+        }
+
+        await TaskService.UpdateDbaRecordAsync(dBA, dBA.DbaId);
+        NavigationManager.NavigateTo("/Dba", true);
+    }
+
+    protected async void DeleteItem(GridCommandEventArgs args)
+    {
+        DBA dBA = new();
+        dBA = (DBA)args.Item;
+        await TaskService.DeleteDbaRecordAsync(dBA, dBA.DbaId);
+
+        NavigationManager.NavigateTo("/Dba", true);
+    }
+
+
+    void OnCellRenderHandler(GridCellRenderEventArgs args)
+    {
+        DBA dBA = new();
+        dBA = (DBA)args.Item;
+        if (dBA.DateOfDba < DateTime.Today && dBA.IsCompleted == false)
+        {
+            args.Class = "highlightCellBackGroud";
+        }
+
+    }
+
+    public void ShowNotifications()
+    {
+        Notification.Instance.Show(new NotificationModel()
+        {
+            Text = "You have a DBA that is past due",
+            ThemeColor = "error",
+            Closable = true,
+            CloseAfter = 0
+        });
+    }
+
+}
+
+
+<style>
+    .MyTelerikNotification .k-notification-container .k-notification-wrap {
+        width: 300px;
+        height: 50px;
+        font-size: 1.5em;
+        text-align: center;
+        align-items: center;
+    }
+    .highlightCellBackGroud {
+        background-color: #FAA0A0;
+        color: white;
+    }
+</style>
+

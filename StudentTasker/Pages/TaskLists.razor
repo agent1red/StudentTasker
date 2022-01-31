@@ -1,0 +1,243 @@
+﻿@page "/StudentTasks"
+
+@inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
+@inject NavigationManager NavigationManager;
+@using StudentTaskerModels
+@using Telerik.Blazor.Components
+@using System.Threading.Tasks;
+
+@using System.ComponentModel.DataAnnotations
+
+
+<div class="d-flex-column justify-content-center mb-4 mt-5">
+    <div class="row d-flex justify-content-center">
+        <h5>Add Your Task Here</h5>
+    </div>
+    <div class="row d-flex justify-content-center">
+        <div class="row border border-primary rounded p-5">
+            <TelerikForm Model="@StudentTask" EditContext="@MyEditContext" OnValidSubmit="@OnSubmitHandler" ValidationMessageType="@FormValidationMessageType.Tooltip">
+                <FormValidation>
+                    <DataAnnotationsValidator></DataAnnotationsValidator>
+                </FormValidation>
+                <FormItems>
+                    <FormItem Field="@nameof(StudentTask.SubjectType)"></FormItem>
+                    <FormItem Field="@nameof(StudentTask.TaskNumber)"></FormItem>
+                </FormItems>
+            </TelerikForm>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="row mb-5 vh-100">
+    <div class="container w-75">
+        <TelerikGrid @ref="Grid"
+                     Data="@StudentTasks"
+                     PageSize="5"
+                     Sortable="true"
+                     Groupable="true"
+                     Pageable="true"
+                     OnUpdate="@UpdateItem"
+                     OnDelete="@DeleteItem"
+                     ConfirmDelete="true"
+                     FilterMode="@GridFilterMode.FilterMenu"
+                     SelectionMode="@GridSelectionMode.Multiple"
+                     EditMode="@GridEditMode.Inline">
+            <GridToolBar>
+                <GridSearchBox Fields="@SearchableFields" DebounceDelay="200"></GridSearchBox>
+            </GridToolBar>
+            <GridColumns>
+
+                <GridColumn Field="@(nameof(StudentTask.TaskId))" Title="ID" Filterable="false" Editable="false" Groupable="false" Width="60px"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.SubjectType))" Title="Subject" Editable="true" Filterable="false" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.TaskNumber))" Title="Task" Filterable="false" Groupable="false" OnCellRender="@OnCellRenderHandlerTask"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.DateCreated))" Title="Date Created" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="false" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.DateCompleted))" Title="Date Completed" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Groupable="true" OnCellRender="@OnCellRenderHandler"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.IsCompleted))" Title="Completed" Filterable="true" Groupable="true" Width="120px">
+                    <Template>
+                        @{
+                            var t = context as StudentTask;
+                            if (t.IsCompleted == true)
+                            {
+                                <td>Yes</td>
+                            }
+                            else
+                            {
+                                <td>No</td>
+                            }
+
+                        }
+                    </Template>
+                </GridColumn>
+                <GridCommandColumn Title="Edit or Delete">
+                    <GridCommandButton Command="Edit" Icon="edit"></GridCommandButton>
+                    <GridCommandButton Command="Delete" Icon="delete">Delete</GridCommandButton>
+                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
+                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                </GridCommandColumn>
+
+            </GridColumns>
+
+        </TelerikGrid>
+    </div>
+
+</div>
+
+
+@code {
+
+
+    [CascadingParameter]
+    protected Notification Notification { get; set; }
+
+    List<string> SearchableFields = new List<string> { "Completed" };
+    public EditContext MyEditContext { get; set; }
+    public StudentTask StudentTask = new();
+
+    private List<StudentTask> StudentTasks { get; set; }
+    public TelerikGrid<StudentTask> Grid { get; set; }
+
+
+    //Cancelation operations
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        MyEditContext = new EditContext(StudentTask);
+        StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+    }
+
+
+    protected async void OnSubmitHandler(EditContext editContext)
+    {
+
+
+        await TaskService.AddStudentTaskAsync(StudentTask);
+        NavigationManager.NavigateTo("/", true);
+
+    }
+
+
+    protected async void UpdateItem(GridCommandEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        if (studentTask.DateCompleted == null || studentTask.TaskNumber <= 0)
+        {
+            if (studentTask.DateCompleted == null)
+            {
+                ShowNotifications();
+            }
+            if (studentTask.TaskNumber <= 0)
+            {
+                ShowNotificationTaskNo();
+            }
+            return;
+        }
+
+        await TaskService.UpdateStudentRecordAsync(studentTask, studentTask.TaskId);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+
+    protected async void DeleteItem(GridCommandEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        await TaskService.DeleteStudentRecordAsync(studentTask, studentTask.TaskId);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    protected async void GetNewData()
+    {
+        MyEditContext = new EditContext(StudentTask);
+        StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+    }
+
+    public void ShowNotifications()
+    {
+        Notification.Instance.Show(new NotificationModel()
+        {
+            Text = "You Forgot to Add the Date Completed Part!",
+            ThemeColor = "error",
+            Closable = true,
+            CloseAfter = 10000
+        });
+    }
+
+    public void ShowNotificationTaskNo()
+    {
+        Notification.Instance.Show(new NotificationModel()
+        {
+            Text = "Task Number is empty!",
+            ThemeColor = "error",
+            Closable = true,
+            CloseAfter = 10000
+        });
+    }
+
+    void OnCellRenderHandlerTask(GridCellRenderEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        if (studentTask.TaskNumber <= (decimal)0.00)
+        {
+            args.Class = "highlightCellBackGroud";
+        }
+
+
+    }
+
+    void OnCellRenderHandler(GridCellRenderEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        if (studentTask.DateCompleted == null)
+        {
+            args.Class = "highlightCellBackGroud";
+        }
+
+    }
+
+}
+
+<style>
+    .MyTelerikNotification .k-notification-container .k-notification-wrap {
+        width: 300px;
+        height: 50px;
+        font-size: 1.5em;
+        text-align: center;
+        align-items: center;
+    }
+
+    .highlightCellBackGroud {
+        background-color: #FAA0A0;
+        color: white;
+    }
+
+    .content {
+        background-color: #485461;
+        background-image: linear-gradient(315deg, #485461 0%, #28313b 74%);
+        color: ghostwhite;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .k-form-label{
+        color: whitesmoke;
+    }
+
+</style>
+ 

@@ -1,0 +1,144 @@
+﻿@page "/dashboard"
+@using Microsoft.EntityFrameworkCore
+@using StudentTasker.Data
+@using StudentTaskerModels
+@using Telerik.Blazor.Components
+@implements IDisposable
+
+@inject IDbContextFactory<DataContext> ConstextFactory
+@inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
+@inject StudentTasker.Service.TaskService.IGetNewData GetNewData
+@inject NavigationManager NavigationManager;
+
+
+
+
+
+
+<div class="d-flex justify-content-center mt-5">
+    <h3>Dashboard</h3>
+</div>
+
+<div class="d-flex row justify-content-center vh-100">
+    <div class="border border-0 rounded w-50">
+        @if (TotalTasks != CountCompleted)
+        {
+            <PieChartComponent CountCompleted="CountCompleted"
+                               CountNotCompleted="CountNotCompleted"
+                               TotalTasks="TotalTasks"
+                               StudentTasks="StudentTasks"
+                               SubjectName="SubjectName"></PieChartComponent>
+        }
+        else if (TotalTasks > 0 && TotalTasks == CountCompleted)
+        {
+            <div class="d-flex row justify-content-center mt-5">
+                <h1>Good Job Reanna You met your Daily Goal!</h1>
+            </div>
+
+        }
+        else
+        {
+            <div class="d-flex row justify-content-center mt-5">
+                <h1>Your School Day Hasn't Started!</h1>
+            </div>
+        }
+
+    </div>
+
+    @if (TotalTasks != CountCompleted)
+    {
+        <div class="border border-0 rounded ml-2 mr-2">
+
+            <SubjectListComponent StudentTasks="StudentTasks"
+                                  CountCompleted="CountCompleted"
+                                  CountNotCompleted="CountNotCompleted"
+                                  TotalTasks="TotalTasks"
+                                  SubjectName="SubjectName"></SubjectListComponent>
+
+        </div>
+    }
+    else if (TotalTasks > 0 && TotalTasks == CountCompleted)
+    {
+        <div class="border border-0 rounded ml-2 mr-2">
+
+            <SubjectListComponent StudentTasks="StudentTasks"
+                                  CountCompleted="CountCompleted"
+                                  CountNotCompleted="CountNotCompleted"
+                                  TotalTasks="TotalTasks"
+                                  SubjectName="SubjectName"></SubjectListComponent>
+
+        </div>
+    }
+            else
+            {
+
+            }
+
+
+</div>
+
+@code {
+    PieChartComponent PieChartComponent;
+    System.Threading.Timer timer;
+    public string Title { get; set; }
+
+    private List<StudentTask> StudentTasks { get; set; }
+
+    public int CountCompleted { get; set; }
+
+    public int CountCompletedWeek { get; set; }
+
+    public int CountNotCompleted { get; set; }
+
+    public int TotalTasksToday { get; set; }
+
+    public int TotalTasks { get; set; }
+
+    public string SubjectName { get; set; } = "Today";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+        StudentTasks = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).OrderByDescending(x => x.DateCreated).ToList();
+        CountCompleted = StudentTasks.Where(x => (x.IsCompleted == true) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+        CountNotCompleted = StudentTasks.Where(x => (x.IsCompleted == false) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+        TotalTasksToday = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+        TotalTasks = TotalTasksToday;
+        timer = new System.Threading.Timer(async _ => // async void
+        {
+            StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+            StudentTasks = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).OrderByDescending(x => x.DateCreated).ToList();
+            CountCompleted = StudentTasks.Where(x => (x.IsCompleted == true) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+            CountNotCompleted = StudentTasks.Where(x => (x.IsCompleted == false) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+            TotalTasksToday = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
+            TotalTasks = TotalTasksToday;
+            try
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+            catch
+            {
+            }
+        }, null, 0, 5000);
+    }
+
+    public void Dispose()
+    {
+        if (timer is not null) // C# 9.0
+        {
+            timer.Dispose();
+        }
+    }
+
+}
+
+
+<style>
+    .content {
+        background-color: #485461;
+        background-image: linear-gradient(315deg, #485461 0%, #28313b 74%);
+        color: ghostwhite;
+        -webkit-font-smoothing: antialiased;
+    }
+</style>

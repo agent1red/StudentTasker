@@ -1,0 +1,170 @@
+﻿@page "/History"
+@inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
+@inject NavigationManager NavigationManager;
+@using StudentTaskerModels
+@using Telerik.Blazor.Components
+
+
+
+<h3 class="mt-5">History Tasks</h3>
+
+<div class="row">
+    <div class="container w-75">
+        <TelerikGrid @ref="Grid"
+                     Data="@StudentTasks"
+                     PageSize="5"
+                     Sortable="true"
+                     Groupable="true"
+                     Pageable="true"
+                     OnUpdate="@UpdateItem"
+                     OnDelete="@DeleteItem"
+                     ConfirmDelete="true"
+                     FilterMode="@GridFilterMode.FilterMenu"
+                     SelectionMode="@GridSelectionMode.Multiple"
+                     EditMode="@GridEditMode.Inline">
+            <GridToolBar>
+                <GridSearchBox Fields="@SearchableFields" DebounceDelay="200"></GridSearchBox>
+            </GridToolBar>
+            <GridColumns>
+
+                <GridColumn Field="@(nameof(StudentTask.TaskId))" Title="ID" Filterable="false" Editable="false" Groupable="false" Width="60px"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.SubjectType))" Title="Subject" Editable="false" Filterable="false" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.TaskNumber))" Title="Task" Filterable="false" Groupable="false"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.DateCreated))" Title="Date Created" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="false" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.DateCompleted))" Title="Date Completed" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Groupable="true"></GridColumn>
+
+                <GridColumn Field="@(nameof(StudentTask.IsCompleted))" Title="Completed" Filterable="true" Groupable="true" Width="120px">
+                    <Template>
+                        @{
+                            var t = context as StudentTask;
+                            if (t.IsCompleted == true)
+                            {
+                                <td>Yes</td>
+                            }
+                            else
+                            {
+                                <td>No</td>
+                            }
+
+                        }
+                    </Template>
+                </GridColumn>
+                <GridCommandColumn Title="Edit or Delete">
+                    <GridCommandButton Command="Edit" Icon="edit"></GridCommandButton>
+                    <GridCommandButton Command="Delete" Icon="delete">Delete</GridCommandButton>
+                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
+                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                </GridCommandColumn>
+
+            </GridColumns>
+
+        </TelerikGrid>
+    </div>
+</div>
+
+
+<PieChartComponent CountCompleted="CountCompleted"
+                   CountNotCompleted="CountNotCompleted"
+                   TotalTasks="TotalTasks"
+                   StudentTasks="StudentTasks"
+                   SubjectName="SubjectName"></PieChartComponent>
+<div class="row mt-5"></div>
+
+@code {
+
+    protected PieChartComponent PieChartComponent;
+
+
+
+    List<string> SearchableFields = new List<string> { "Completed" };
+    public EditContext MyEditContext { get; set; }
+    public StudentTask StudentTask = new();
+    public int CountCompleted { get; set; }
+    public int CountNotCompleted { get; set; }
+    public int TotalTasks { get; set; } = (int)SubjectTotals.History;
+    public string SubjectName { get; set; } = Subject.History.ToString();
+
+    private List<StudentTask> StudentTasks { get; set; }
+    public TelerikGrid<StudentTask> Grid { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        MyEditContext = new EditContext(StudentTask);
+
+        StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
+        StudentTasks = StudentTasks
+            .Where(x => x.SubjectName == Subject.History.ToString()).ToList();
+
+
+        CountCompleted = StudentTasks.Where(x => x.IsCompleted == true).Count();
+        CountNotCompleted = StudentTasks.Where(x => x.IsCompleted == false).Count();
+
+    }
+
+
+    protected async void OnSubmitHandler(EditContext editContext)
+    {
+
+        await TaskService.AddStudentTaskAsync(StudentTask);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+
+    protected async void UpdateItem(GridCommandEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        await TaskService.UpdateStudentRecordAsync(studentTask, studentTask.TaskId);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    protected async void DeleteItem(GridCommandEventArgs args)
+    {
+        StudentTask studentTask = new();
+        studentTask = (StudentTask)args.Item;
+        await TaskService.DeleteStudentRecordAsync(studentTask, studentTask.TaskId);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    protected async void GetNewData()
+    {
+        MyEditContext = new EditContext(StudentTask);
+
+        StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
+        StudentTasks = StudentTasks
+            .Where(x => x.SubjectName == Subject.History.ToString()).ToList();
+
+
+        CountCompleted = StudentTasks.Where(x => x.IsCompleted == true).Count();
+        CountNotCompleted = StudentTasks.Where(x => x.IsCompleted == false).Count();
+    }
+
+
+
+}
+
+
+<style>
+    .content {
+        background-color: #485461;
+        background-image: linear-gradient(315deg, #485461 0%, #28313b 74%);
+        color: ghostwhite;
+        -webkit-font-smoothing: antialiased;
+    }
+</style>

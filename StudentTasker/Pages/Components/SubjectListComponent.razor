@@ -1,0 +1,105 @@
+﻿@inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
+@using StudentTaskerModels
+@using Telerik.Blazor.Components
+
+
+<div class="mt-5">
+    <TelerikCard ThemeColor="dark" Width="300px">
+        <CardHeader Class="k-hbox">
+            <div>
+                <CardTitle>
+                    <h2>Today's Plan</h2>
+                </CardTitle>
+                <CardSubTitle>
+                    <h6>Total Tasks Created Today: <span class="badge badge-pill badge-primary">@TotalTasks</span></h6>
+
+                </CardSubTitle>
+            </div>
+        </CardHeader>
+        <CardSeparator></CardSeparator>
+        <CardBody>
+            <div class="mt-3">
+                <div class="btn-block">Tasks Completed:   <span class="badge badge-pill badge-success">@CountCompleted</span></div>
+                <div class="btn-block">Tasks In Progress: <span class="badge badge-pill badge-danger">@CountNotCompleted</span></div>
+            </div>
+            <ul class="list-unstyled mt-4">
+                @if (StudentTasks != null)
+                {
+                    @foreach (var item in StudentTasks?.OrderByDescending(x => x.IsCompleted))
+                    {
+                        if (item.IsCompleted == true)
+                        {
+                            <li class="mt-2">
+                                <button type="button" class="btn btn-block btn-success text-left">
+                                    @item.SubjectName  <span class="badge badge-light float-lg-right">@item.TaskNumber</span>
+                                </button>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="mt-2">
+                                <button type="button" class="btn btn-block btn-danger text-left">
+                                    @item.SubjectName  <span class="badge badge-light float-lg-right">@item.TaskNumber</span>
+                                </button>
+                            </li>
+                        }
+                    }
+                }
+
+
+            </ul>
+        </CardBody>
+    </TelerikCard>
+</div>
+
+
+
+
+@code {
+    [Parameter]
+    public List<StudentTask> StudentTasks { get; set; }
+    [Parameter]
+    public int CountCompleted { get; set; }
+    public int CountCompletedWeek { get; set; }
+    [Parameter]
+    public int CountNotCompleted { get; set; }
+
+    public int TotalTasksToday { get; set; }
+    [Parameter]
+    public int TotalTasks { get; set; }
+    [Parameter]
+    public string SubjectName { get; set; }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+}
+
+<style>
+
+
+    .mb-xs {
+        margin-bottom: 8px;
+    }
+
+    .align-end {
+        text-align: end;
+    }
+
+    .justify-space-between {
+        justify-content: space-between;
+    }
+
+    .justify-center {
+        justify-content: center;
+    }
+
+    .flex-end {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+</style>

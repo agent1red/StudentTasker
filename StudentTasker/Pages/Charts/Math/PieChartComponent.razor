@@ -1,0 +1,143 @@
+﻿@using StudentTaskerModels
+
+
+<div class="row d-flex justify-content-center mt-5" style="height: 500px">
+ <div class="container">
+
+            <TelerikChart Width="100%" Height="100%" Class="k-hbox">
+                <ChartSeriesItems>
+                    <ChartSeries Type="ChartSeriesType.Pie" Data="@data1"
+                                 Field="@nameof(MyPieChartModel.Completed)"
+                                 ExplodeField="@nameof(MyPieChartModel.IsSeparated)"
+                                 CategoryField="@nameof(MyPieChartModel.SegmentName)"
+                                 ColorField="@nameof(MyPieChartModel.SegmentColor)">
+                        
+                        <ChartLegend Orientation="ChartLegendOrientation.Horizontal" Position="ChartLegendPosition.Bottom">
+                            @*<ChartLegendLabels Color="white"></ChartLegendLabels>*@
+                        </ChartLegend>
+                       
+                        <ChartChartArea Background="#d9d9d9"></ChartChartArea>
+
+                
+                        <ChartSeriesTooltip Visible="true"
+                                            Background="#0000FF"
+                                            Color="#D3D3D3">
+                        </ChartSeriesTooltip>
+                        <ChartSeriesLabels Visible="true"
+                                           Template="#=category#"
+                                           Background="transparent"
+                                           Position="ChartSeriesLabelsPosition.OutsideEnd" />
+                        <ChartSeriesTooltip Visible="true" ></ChartSeriesTooltip>
+                    </ChartSeries>
+                </ChartSeriesItems>
+                @*Need to look into this why it's showing 'Subjectname' in the string*@
+                @*<ChartTitle Text="@Title" Font="bold">@Title</ChartTitle>*@
+
+                <ChartLegend Position="ChartLegendPosition.Right">
+                </ChartLegend>
+            </TelerikChart>
+        </div>
+
+</div>
+
+
+@code {
+
+    [Parameter]
+    public int CountCompleted { get; set; }
+
+    [Parameter]
+    public int CountNotCompleted { get; set; }
+
+    [Parameter]
+    public int TotalTasks { get; set; }
+
+    [Parameter]
+    public List<StudentTask> StudentTasks { get; set; }
+
+    [Parameter]
+    public string SubjectName { get; set; }
+
+
+    public string Title { get; set; }
+
+
+    public List<MyPieChartModel> data1 { get; set; }
+
+    public StudentTask StudentTask { get; set; }
+
+    protected override void OnInitialized()
+    {
+        var completed = CountCompleted;
+        var notCompleted = CountNotCompleted;
+        var totalTasks = TotalTasks;
+        //Title = $"Progress for {SubjectName}";
+        Title = $"Progress for {SubjectName}";
+        data1 = new()
+        {
+
+            new MyPieChartModel
+            {
+                SegmentName = "Completed",
+                Completed = completed,
+                SegmentColor = "#58D68D",
+                IsSeparated = true
+            },
+            new MyPieChartModel
+            {
+                SegmentName = "Not Completed",
+                Completed = notCompleted,
+                SegmentColor = "#C70039"
+            },
+            new MyPieChartModel
+            {
+                SegmentName = "Total Segment Tasks",
+                Completed = totalTasks,
+                SegmentColor = "rgba(12,13,250,0.7)"
+            },
+
+        };
+
+    }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void GetNewData()
+    {
+        var completed = CountCompleted;
+        var notCompleted = CountNotCompleted;
+        var totalTasks = TotalTasks;
+        Title = $"Progress for {SubjectName}";
+        data1 = new()
+        {
+
+            new MyPieChartModel
+            {
+                SegmentName = "Completed",
+                Completed = completed,
+                SegmentColor = "#58D68D",
+                IsSeparated = true
+            },
+            new MyPieChartModel
+            {
+                SegmentName = "Not Completed",
+                Completed = notCompleted,
+                SegmentColor = "#C70039"
+            },
+            new MyPieChartModel
+            {
+                SegmentName = "Total Segment Tasks",
+                Completed = totalTasks,
+                SegmentColor = "rgba(12,13,250,0.7)"
+            },
+
+        };
+    }
+
+}

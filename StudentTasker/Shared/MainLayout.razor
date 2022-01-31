@@ -1,0 +1,50 @@
+﻿@inherits LayoutComponentBase
+<TelerikRootComponent>
+
+
+    <div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <div class="main">
+       
+            <TelerikNotification @ref="@Notification.Instance"
+                                 HorizontalPosition="@NotificationHorizontalPosition.Right"
+                                 VerticalPosition="@NotificationVerticalPosition.Top"
+                                 Class="big-notification">
+            </TelerikNotification>
+            <CascadingValue IsFixed="true" Value="@Notification">
+                <div class="content px-4">
+                    @Body
+                </div>
+                </CascadingValue>
+        </div>
+    </div>
+</TelerikRootComponent>
+
+@code{
+    Notification Notification { get; set; } = new Notification();
+}
+
+
+<style>
+    .big-notification .k-notification-container .k-notification-wrap {
+        width: 350px;
+        height: 30px;
+       
+    }
+
+    .big-notification {
+        margin-top: 150px;
+    }
+
+    .k-notiification-content{
+
+    }
+
+    .big-notification {
+        z-index: 1234;
+    }
+ 
+</style>
