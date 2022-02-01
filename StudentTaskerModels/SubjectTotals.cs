@@ -8,9 +8,9 @@ namespace StudentTaskerModels
 {
     public enum SubjectTotals
     {
-        Math = 52,
-        Science = 22,
-        History = 35,
-        English = 35
+        Math = 43,
+        Science = 18,
+        History = 26,
+        English = 24
     }
 }

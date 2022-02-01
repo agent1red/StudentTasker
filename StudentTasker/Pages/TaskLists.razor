@@ -30,63 +30,83 @@
     </div>
 </div>
 
-<div class="row mb-5 vh-100">
-    <div class="container w-75">
-        <TelerikGrid @ref="Grid"
-                     Data="@StudentTasks"
-                     PageSize="5"
-                     Sortable="true"
-                     Groupable="true"
-                     Pageable="true"
-                     OnUpdate="@UpdateItem"
-                     OnDelete="@DeleteItem"
-                     ConfirmDelete="true"
-                     FilterMode="@GridFilterMode.FilterMenu"
-                     SelectionMode="@GridSelectionMode.Multiple"
-                     EditMode="@GridEditMode.Inline">
-            <GridToolBar>
-                <GridSearchBox Fields="@SearchableFields" DebounceDelay="200"></GridSearchBox>
-            </GridToolBar>
-            <GridColumns>
+<div class="d-flex flex-column mb-5">
+    <div class="row">
+        <div class="container w-75">
+            <TelerikGrid @ref="Grid"
+                         Data="@StudentTasks"
+                         PageSize="5"
+                         Sortable="true"
+                         Groupable="true"
+                         Pageable="true"
+                         OnUpdate="@UpdateItem"
+                         OnDelete="@DeleteItem"
+                         ConfirmDelete="true"
+                         FilterMode="@GridFilterMode.FilterMenu"
+                         SelectionMode="@GridSelectionMode.Multiple"
+                         EditMode="@GridEditMode.Inline">
+                <GridToolBar>
+                    <GridSearchBox Fields="@SearchableFields" DebounceDelay="200"></GridSearchBox>
+                </GridToolBar>
+                <GridColumns>
 
-                <GridColumn Field="@(nameof(StudentTask.TaskId))" Title="ID" Filterable="false" Editable="false" Groupable="false" Width="60px"></GridColumn>
+                    <GridColumn Field="@(nameof(StudentTask.TaskId))" Title="ID" Filterable="false" Editable="false" Groupable="false" Width="60px"></GridColumn>
 
-                <GridColumn Field="@(nameof(StudentTask.SubjectType))" Title="Subject" Editable="true" Filterable="false" Groupable="true"></GridColumn>
+                    <GridColumn Field="@(nameof(StudentTask.SubjectType))" Title="Subject" Editable="true" Filterable="false" Groupable="true"></GridColumn>
 
-                <GridColumn Field="@(nameof(StudentTask.TaskNumber))" Title="Task" Filterable="false" Groupable="false" OnCellRender="@OnCellRenderHandlerTask"></GridColumn>
+                    <GridColumn Field="@(nameof(StudentTask.TaskNumber))" Title="Task" Filterable="false" Groupable="false" OnCellRender="@OnCellRenderHandlerTask"></GridColumn>
 
-                <GridColumn Field="@(nameof(StudentTask.DateCreated))" Title="Date Created" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="false" Groupable="true"></GridColumn>
+                    <GridColumn Field="@(nameof(StudentTask.DateCreated))" Title="Date Created" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Editable="false" Groupable="true"></GridColumn>
 
-                <GridColumn Field="@(nameof(StudentTask.DateCompleted))" Title="Date Completed" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Groupable="true" OnCellRender="@OnCellRenderHandler"></GridColumn>
+                    <GridColumn Field="@(nameof(StudentTask.DateCompleted))" Title="Date Completed" DisplayFormat="{0:MMM dd, yyyy}" Filterable="true" Groupable="true" OnCellRender="@OnCellRenderHandler"></GridColumn>
 
-                <GridColumn Field="@(nameof(StudentTask.IsCompleted))" Title="Completed" Filterable="true" Groupable="true" Width="120px">
-                    <Template>
-                        @{
-                            var t = context as StudentTask;
-                            if (t.IsCompleted == true)
-                            {
-                                <td>Yes</td>
+                    <GridColumn Field="@(nameof(StudentTask.IsCompleted))" Title="Completed" Filterable="true" Groupable="true" Width="120px">
+                        <Template>
+                            @{
+                                var t = context as StudentTask;
+                                if (t.IsCompleted == true)
+                                {
+                                    <td>Yes</td>
+                                }
+                                else
+                                {
+                                    <td>No</td>
+                                }
+
                             }
-                            else
-                            {
-                                <td>No</td>
-                            }
+                        </Template>
+                    </GridColumn>
+                    <GridCommandColumn Title="Edit or Delete">
+                        <GridCommandButton Command="Edit" Icon="edit"></GridCommandButton>
+                        <GridCommandButton Command="Delete" Icon="delete">Delete</GridCommandButton>
+                        <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
+                        <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
+                    </GridCommandColumn>
 
-                        }
-                    </Template>
-                </GridColumn>
-                <GridCommandColumn Title="Edit or Delete">
-                    <GridCommandButton Command="Edit" Icon="edit"></GridCommandButton>
-                    <GridCommandButton Command="Delete" Icon="delete">Delete</GridCommandButton>
-                    <GridCommandButton Command="Save" Icon="save" ShowInEdit="true">Update</GridCommandButton>
-                    <GridCommandButton Command="Cancel" Icon="cancel" ShowInEdit="true">Cancel</GridCommandButton>
-                </GridCommandColumn>
+                </GridColumns>
 
-            </GridColumns>
+            </TelerikGrid>
 
-        </TelerikGrid>
+        </div>
+        
     </div>
+  
+    
+   
 
+
+</div>
+<div class=" row d-flex justify-content-center " style="padding-bottom: 100px">
+
+
+    <div class=" mt-5 text-center" style="margin-right: 100px">
+        <ProgressBarComponent Title="@Subject.Math.ToString()" MaxValueToAdd="MathMaxValue" ValueToAdd="MathPBValue"></ProgressBarComponent>
+        <ProgressBarComponent Title="@Subject.Science.ToString()" MaxValueToAdd="ScienceMaxValue" ValueToAdd="SciencePBValue"></ProgressBarComponent>
+    </div>
+    <div class="mt-5 text-xl-center">
+        <ProgressBarComponent Title="@Subject.English.ToString()" MaxValueToAdd="ElaMaxValue" ValueToAdd="ElaPBValue"></ProgressBarComponent>
+        <ProgressBarComponent Title="@Subject.History.ToString()" MaxValueToAdd="HistoryMaxValue" ValueToAdd="HistoryPBValue"></ProgressBarComponent>
+    </div>
 </div>
 
 
@@ -104,6 +124,24 @@
     public TelerikGrid<StudentTask> Grid { get; set; }
 
 
+    public int ScienceMaxValue { get; set; } = (int)SubjectTotals.Science;
+
+    public int HistoryMaxValue { get; set; } = (int)SubjectTotals.History;
+
+    public int ElaMaxValue { get; set; } = (int)SubjectTotals.English;
+
+    public int MathMaxValue { get; set; } = (int)SubjectTotals.Math;
+
+    public int MathPBValue { get; set; }
+    public int SciencePBValue { get; set; }
+    public int ElaPBValue { get; set; }
+    public int HistoryPBValue { get; set; }
+
+
+    public int MaxValue { get; set; }
+    public int PBValue { get; set; }
+
+
     //Cancelation operations
 
 
@@ -112,6 +150,12 @@
     {
         MyEditContext = new EditContext(StudentTask);
         StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
+        MathPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Math.ToString()).Count();
+        SciencePBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Science.ToString()).Count();
+        ElaPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.English.ToString()).Count();
+        HistoryPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.History.ToString()).Count();
+
     }
 
 
@@ -120,7 +164,9 @@
 
 
         await TaskService.AddStudentTaskAsync(StudentTask);
-        NavigationManager.NavigateTo("/", true);
+        GetNewData();
+        await Task.Delay(1);
+        await InvokeAsync(StateHasChanged);
 
     }
 
@@ -165,6 +211,11 @@
     {
         MyEditContext = new EditContext(StudentTask);
         StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
+        MathPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Math.ToString()).Count();
+        SciencePBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Science.ToString()).Count();
+        ElaPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.English.ToString()).Count();
+        HistoryPBValue = StudentTasks.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.History.ToString()).Count();
     }
 
     public void ShowNotifications()

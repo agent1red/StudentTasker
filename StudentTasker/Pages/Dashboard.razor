@@ -7,7 +7,6 @@
 
 @inject IDbContextFactory<DataContext> ConstextFactory
 @inject StudentTasker.Service.TaskService.IStudentTaskService TaskService
-@inject StudentTasker.Service.TaskService.IGetNewData GetNewData
 @inject NavigationManager NavigationManager;
 
 
@@ -19,7 +18,7 @@
     <h3>Dashboard</h3>
 </div>
 
-<div class="d-flex row justify-content-center vh-100">
+<div class="d-flex row justify-content-center">
     <div class="border border-0 rounded w-50">
         @if (TotalTasks != CountCompleted)
         {
@@ -69,13 +68,26 @@
 
         </div>
     }
-            else
-            {
+    else
+    {
 
-            }
+    }
 
 
 </div>
+<div class="row d-flex justify-content-center min-vh-100" style="padding-bottom: 100px">
+
+
+    <div class="mt-5 text-center" style="margin-right: 100px">
+        <ProgressBarComponent Title="@Subject.Math.ToString()" Type="guage" MaxValueToAdd="MathMaxValue" ValueToAdd="MathPBValue"></ProgressBarComponent>
+        <ProgressBarComponent Title="@Subject.Science.ToString()" Type="guage" MaxValueToAdd="ScienceMaxValue" ValueToAdd="SciencePBValue"></ProgressBarComponent>
+    </div>
+    <div class="mt-5 text-center">
+        <ProgressBarComponent Title="@Subject.English.ToString()" Type="guage" MaxValueToAdd="ElaMaxValue" ValueToAdd="ElaPBValue"></ProgressBarComponent>
+        <ProgressBarComponent Title="@Subject.History.ToString()" Type="guage" MaxValueToAdd="HistoryMaxValue" ValueToAdd="HistoryPBValue"></ProgressBarComponent>
+    </div>
+</div>
+
 
 @code {
     PieChartComponent PieChartComponent;
@@ -83,6 +95,7 @@
     public string Title { get; set; }
 
     private List<StudentTask> StudentTasks { get; set; }
+    private List<StudentTask> StudentTasksProgress { get; set; }
 
     public int CountCompleted { get; set; }
 
@@ -97,22 +110,55 @@
     public string SubjectName { get; set; } = "Today";
 
 
+
+    public int ScienceMaxValue { get; set; } = (int)SubjectTotals.Science;
+
+    public int HistoryMaxValue { get; set; } = (int)SubjectTotals.History;
+
+    public int ElaMaxValue { get; set; } = (int)SubjectTotals.English;
+
+    public int MathMaxValue { get; set; } = (int)SubjectTotals.Math;
+
+    public int MathPBValue { get; set; }
+    public int SciencePBValue { get; set; }
+    public int ElaPBValue { get; set; }
+    public int HistoryPBValue { get; set; }
+
+
+    public int MaxValue { get; set; }
+    public int PBValue { get; set; }
+
+
     protected override async Task OnInitializedAsync()
     {
         StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+        StudentTasksProgress = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
         StudentTasks = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).OrderByDescending(x => x.DateCreated).ToList();
         CountCompleted = StudentTasks.Where(x => (x.IsCompleted == true) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
         CountNotCompleted = StudentTasks.Where(x => (x.IsCompleted == false) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
         TotalTasksToday = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
         TotalTasks = TotalTasksToday;
+
+        MathPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Math.ToString()).Count();
+        SciencePBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Science.ToString()).Count();
+        ElaPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.English.ToString()).Count();
+        HistoryPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.History.ToString()).Count();
+
         timer = new System.Threading.Timer(async _ => // async void
         {
             StudentTasks = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+            StudentTasksProgress = await Task.Run(() => TaskService.GetAllStudentTasksAsync());
+
             StudentTasks = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).OrderByDescending(x => x.DateCreated).ToList();
             CountCompleted = StudentTasks.Where(x => (x.IsCompleted == true) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
             CountNotCompleted = StudentTasks.Where(x => (x.IsCompleted == false) && x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
             TotalTasksToday = StudentTasks.Where(x => x.DateCreated.ToShortDateString() == DateTime.Today.ToShortDateString()).Count();
             TotalTasks = TotalTasksToday;
+            MathPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Math.ToString()).Count();
+            SciencePBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.Science.ToString()).Count();
+            ElaPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.English.ToString()).Count();
+            HistoryPBValue = StudentTasksProgress.Where(x => (x.IsCompleted == true) && x.SubjectName == SubjectType.History.ToString()).Count();
             try
             {
                 await InvokeAsync(StateHasChanged);

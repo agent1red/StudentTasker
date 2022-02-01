@@ -1,0 +1,80 @@
+﻿@using StudentTaskerModels
+
+@if (Type == "bar")
+{
+    <div class="container">
+        <h1>@Title Progress</h1>
+        <TelerikProgressBar Max="@MaxValueToAdd" Value="@ValueToAdd">
+
+        </TelerikProgressBar>
+    </div>
+}
+else if (Type == "guage")
+{
+    <div class="container">
+        <h1>@Title</h1>
+        <TelerikArcGauge>
+            <ArcGaugeCenterLabel>
+                <Template>
+                    @{
+                        var item = context;
+
+                        var pointer = context.Pointers.FirstOrDefault();
+
+                        <div style="font-weight: bold">@pointer.Value</div>
+                    }
+                </Template>
+            </ArcGaugeCenterLabel>
+            <ArcGaugeScales>
+                <ArcGaugeScale Min="0" Max="@MaxValueToAdd"
+                               MajorUnit="5" MinorUnit="1">
+                    <ArcGaugeScaleMinorTicks Color="white" Visible="true" />
+                    <ArcGaugeScaleLabels Color="white" Visible="true" />
+                </ArcGaugeScale>
+            </ArcGaugeScales>
+
+            <ArcGaugePointers>
+
+                <ArcGaugePointer Value="@ValueToAdd" PlaceholderColor="lightblue"
+                                 Color="green">
+                </ArcGaugePointer>
+
+            </ArcGaugePointers>
+        </TelerikArcGauge>
+    </div>
+}
+else
+{
+    <div class="container">
+        <h1>@Title Progress</h1>
+        <TelerikProgressBar Max="@MaxValueToAdd" Value="@ValueToAdd">
+
+        </TelerikProgressBar>
+    </div>
+}
+
+ 
+
+
+
+
+@code {
+
+    [Parameter]
+    public string Type { get; set; }
+
+    [Parameter]
+    public double MaxValueToAdd { get; set; }
+    [Parameter]
+    public double ValueToAdd { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+}
